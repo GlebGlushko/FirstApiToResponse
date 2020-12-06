@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -12,23 +13,32 @@ namespace Weather.Controllers
     [ApiController]
     public class WeatherController : ControllerBase
     {
-        private readonly Solution _solution;
-        public WeatherController(Solution solution)
+        private readonly WeatherAggregator _aggregator;
+        public WeatherController(WeatherAggregator aggregator)
         {
-            _solution = solution;
+            _aggregator = aggregator;
+
         }
         //Returns weather info by geoposition
         [HttpGet("coords")]
-        public async Task<CommonWeatherDto> Get(double lat, double lng)
+        public async Task<ActionResult<CommonWeatherDto>> Get(double lat, double lng)
         {
-            return await _solution.PerformAsync(lat, lng);
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return BadRequest("Coordinates are not in range");
+            return await _aggregator.GetFirstResponseAsync(lat, lng);
         }
         //Returns weather info by city name
         [HttpGet("city")]
-        public async Task<CommonWeatherDto> Get(string address)
+        public async Task<ActionResult<CommonWeatherDto>> Get(string address)
         {
-            return await _solution.PerformAsync(address);
+            if (string.IsNullOrWhiteSpace(address)) return BadRequest("Address is empty or white spaces");
+            try
+            {
+                return await _aggregator.GetFirstResponseAsync(address);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
-
     }
 }

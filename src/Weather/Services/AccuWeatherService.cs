@@ -13,9 +13,12 @@ namespace Weather.Services
     {
         private readonly HttpClient _client;
         private readonly AccuWeatherOptions _options;
-        public AccuWeatherService(IOptions<AccuWeatherOptions> options)
+        private readonly PerformQueryService _performQueryService;
+
+        public AccuWeatherService(IOptions<AccuWeatherOptions> options, PerformQueryService performQueryService)
         {
             _options = options.Value;
+            _performQueryService = performQueryService;
             _client = new HttpClient
             {
                 BaseAddress = new Uri(_options.URL)
@@ -23,12 +26,7 @@ namespace Weather.Services
         }
         public async Task<CommonWeatherDto> PerformQueryAsync(string query)
         {
-            var response = await _client.GetAsync(_options.WeatherRouter + query);
-            if (!response.IsSuccessStatusCode)
-            {
-                string errorMessage = await response.Content.ReadAsStringAsync();
-                throw new Exception(errorMessage);
-            }
+            var response = await _performQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
             return new CommonWeatherDto((await response.Content.ReadAsAsync<AccuWeatherDto[]>())[0]);
         }
 
@@ -44,8 +42,7 @@ namespace Weather.Services
         }
         private string FormQuery(double lat, double lng)
         {
-            return "/geoposition/search?" + string.Join('&',
-                new List<string>{
+            return "/geoposition/search?" + string.Join('&', new[]{
                     "apikey=" + _options.API_KEY,
                     "q=" + $"{lat},{lng}"
                 }
@@ -53,8 +50,7 @@ namespace Weather.Services
         }
         private string FormQuery(string address)
         {
-            return "/search?" + string.Join('&',
-                new List<string>{
+            return "/search?" + string.Join('&', new[]{
                     "apikey=" + _options.API_KEY,
                     "q=" + address,
                 }

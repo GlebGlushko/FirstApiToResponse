@@ -14,9 +14,11 @@ namespace Weather.Services
     {
         private readonly HttpClient _client;
         private readonly OpenWeatherMapOptions _options;
-        public OpenWeatherMapService(IOptions<OpenWeatherMapOptions> options)
+        private readonly PerformQueryService _performQueryService;
+        public OpenWeatherMapService(IOptions<OpenWeatherMapOptions> options, PerformQueryService performQueryService)
         {
             _options = options.Value;
+            _performQueryService = performQueryService;
             _client = new HttpClient
             {
                 BaseAddress = new Uri(_options.URL)
@@ -24,18 +26,13 @@ namespace Weather.Services
         }
         public async Task<CommonWeatherDto> PerformQueryAsync(string query)
         {
-            var response = await _client.GetAsync(_options.Router + '?' + query);
-            if (!response.IsSuccessStatusCode)
-            {
-                string errorMessage = await response.Content.ReadAsStringAsync();
-                throw new Exception(errorMessage);
-            }
-            var r = await response.Content.ReadAsStringAsync();
+            var response = await _performQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
+
             return new CommonWeatherDto(await response.Content.ReadAsAsync<OpenWeatherMapDto>());
         }
         public async Task<CommonWeatherDto> GetWeatherAsync(double lat, double lng) =>
-            await PerformQueryAsync(string.Join('&',
-            new List<string>(){
+            await PerformQueryAsync(string.Join('&', new[]
+            {
                 "appid=" + _options.API_KEY,
                 "lat=" + lat,
                 "lon=" + lng,
@@ -43,8 +40,8 @@ namespace Weather.Services
             }));
 
         public async Task<CommonWeatherDto> GetWeatherAsync(string address) =>
-            await PerformQueryAsync(string.Join('&',
-            new List<string>(){
+            await PerformQueryAsync(string.Join('&', new[]
+            {
                 "appid=" + _options.API_KEY,
                 "q=" + address,
                 "units=metric"
@@ -55,7 +52,7 @@ namespace Weather.Services
     {
         public string API_KEY { get; set; }
         public string URL { get; set; }
-        public string Router { get; set; }
+        public string WeatherRouter { get; set; }
 
     }
 

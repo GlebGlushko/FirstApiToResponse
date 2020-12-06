@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Weather.Logging;
 
 namespace Weather.Middlewares
@@ -24,6 +23,7 @@ namespace Weather.Middlewares
                 Method = context.Request?.Method,
                 Path = context.Request?.Path.Value,
                 QueryString = context.Request.QueryString.Value,
+                RequestedTime = DateTime.Now
             };
             if (log.Path != "/weather/coords" || log.Path != "/weather/city") //this filter just to save requests only from weather info(no swagger or other requests)
             {                                                                 //in real world I would log all requests, and I would implement ILogger interface and inject it
@@ -37,8 +37,6 @@ namespace Weather.Middlewares
                 context.Request.Body.Position = 0;
                 log.Payload = body;
             }
-            log.RequestedTime = DateTime.Now;
-
 
             using (Stream originalRequest = context.Response.Body) //we can't read from ResponseBody, so we save reference to it and pass our stream where we can read
             {

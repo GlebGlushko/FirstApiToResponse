@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using Weather.Logging;
 using Weather.Middlewares;
+using System.Collections.Generic;
+using System;
 
 namespace Weather
 {
@@ -29,59 +31,46 @@ namespace Weather
 
             ConfigureWeatherServices(services);
 
-            services.AddSingleton<FileLogger>((_) => new FileLogger(Directory.GetCurrentDirectory() + "/log.txt"));
+            services.AddSingleton<FileLogger>((_) => new FileLogger(Directory.GetCurrentDirectory() + Configuration["LoggingPath"]));
 
             services.AddSwaggerGen();
 
         }
         ///I decided to move user-defined services that are connected with weather into separate method
-        //this way it's easier to read and update these services separately
+        //this way it's easier to read and update these services separately.
         //Also, I could use a reflection to get rid of similar code, but I didn't do it
         //because each service might have different parameters or steps of initialization
-        //even in our services AccuWeather requires more data to work
+        //even among our services AccuWeather requires more data to work
         public void ConfigureWeatherServices(IServiceCollection services)
         {
             var weatherBitOptions = Configuration.GetSection("WeatherApis:Weatherbit");
-            services.Configure<WeatherbitApiOptions>(wao =>
-            {
-                wao.Router = weatherBitOptions["WeatherRouter"];
-                wao.API_KEY = weatherBitOptions["API_KEY"];
-                wao.URL = weatherBitOptions["URL"];
-            });
+            services.Configure<WeatherbitApiOptions>(weatherBitOptions);
             services.AddScoped<WeatherbitService>();
 
             var openWeatherMapOptions = Configuration.GetSection("WeatherApis:OpenWeatherMap");
-            services.Configure<OpenWeatherMapOptions>(owmo =>
-            {
-                owmo.Router = openWeatherMapOptions["WeatherRouter"];
-                owmo.API_KEY = openWeatherMapOptions["API_KEY"];
-                owmo.URL = openWeatherMapOptions["URL"];
-            });
+            services.Configure<OpenWeatherMapOptions>(openWeatherMapOptions);
             services.AddScoped<OpenWeatherMapService>();
 
             var accuWeatherOptions = Configuration.GetSection("WeatherApis:AccuWeather");
-            services.Configure<AccuWeatherOptions>(awo =>
-            {
-                awo.API_KEY = accuWeatherOptions["API_KEY"];
-                awo.URL = accuWeatherOptions["URL"];
-                awo.LocationsRouter = accuWeatherOptions["LocationsRouter"];
-                awo.WeatherRouter = accuWeatherOptions["WeatherRouter"];
-            });
+            services.Configure<AccuWeatherOptions>(accuWeatherOptions);
             services.AddScoped<AccuWeatherService>();
 
-            services.AddScoped<WeatherAggregator>();
+            services.AddTransient<List<IWeatherService>>(serviceProvider =>
+               new List<IWeatherService>
+               {
+                    serviceProvider.GetRequiredService<WeatherbitService>(),
+                    serviceProvider.GetRequiredService<OpenWeatherMapService>(),
+                    serviceProvider.GetRequiredService<AccuWeatherService>()
+               });
 
-            services.AddScoped<Solution>();
+            services.AddScoped<WeatherAggregator>();
+            services.AddScoped<PerformQueryService>();
 
         }
-        public interface IService { }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            // loggerFactory.AddFile(Path.Combine(Directory.GetCurrentDirectory(), Configuration["LoggingPath"]));
-
-            // var logger = loggerFactory.CreateLogger<FileLogger>();
 
             app.UseMiddleware<RequestLoggingMiddleware>();
 

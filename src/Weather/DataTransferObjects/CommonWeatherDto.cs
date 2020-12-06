@@ -16,6 +16,8 @@ namespace Weather.DataTransferObjects
             public double Speed { get; set; }
         }
 
+        public CommonWeatherDto() { }
+
         public CommonWeatherDto(WeatherbitDto input)
         {
             var data = input.Data[0];
