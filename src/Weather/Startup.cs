@@ -45,26 +45,31 @@ namespace Weather
         {
             var weatherBitOptions = Configuration.GetSection("WeatherApis:Weatherbit");
             services.Configure<WeatherbitApiOptions>(weatherBitOptions);
+            services.AddHttpClient("Weatherbit", c =>
+                c.BaseAddress = new Uri(weatherBitOptions["URL"]));
             services.AddScoped<WeatherbitService>();
 
             var openWeatherMapOptions = Configuration.GetSection("WeatherApis:OpenWeatherMap");
             services.Configure<OpenWeatherMapOptions>(openWeatherMapOptions);
+            services.AddHttpClient("OpenWeatherMap", c =>
+                c.BaseAddress = new Uri(openWeatherMapOptions["URL"]));
             services.AddScoped<OpenWeatherMapService>();
 
             var accuWeatherOptions = Configuration.GetSection("WeatherApis:AccuWeather");
             services.Configure<AccuWeatherOptions>(accuWeatherOptions);
+            services.AddHttpClient("AccuWeather", c =>
+                c.BaseAddress = new Uri(accuWeatherOptions["URL"]));
             services.AddScoped<AccuWeatherService>();
 
             services.AddTransient<List<IWeatherService>>(serviceProvider =>
                new List<IWeatherService>
                {
+                    serviceProvider.GetRequiredService<AccuWeatherService>(),
                     serviceProvider.GetRequiredService<WeatherbitService>(),
                     serviceProvider.GetRequiredService<OpenWeatherMapService>(),
-                    serviceProvider.GetRequiredService<AccuWeatherService>()
-               });
+                });
 
             services.AddScoped<IWeatherAggregator, WeatherAggregator>();
-            services.AddScoped<PerformQueryService>();
 
         }
 

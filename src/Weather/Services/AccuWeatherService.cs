@@ -13,36 +13,33 @@ namespace Weather.Services
     {
         private readonly HttpClient _client;
         private readonly AccuWeatherOptions _options;
-        private readonly PerformQueryService _performQueryService;
 
-        public AccuWeatherService(IOptions<AccuWeatherOptions> options, PerformQueryService performQueryService)
+        public AccuWeatherService(IOptions<AccuWeatherOptions> options, IHttpClientFactory clientFactory)
         {
             _options = options.Value;
-            _performQueryService = performQueryService;
-            _client = new HttpClient
-            {
-                BaseAddress = new Uri(_options.URL)
-            };
+            _client = clientFactory.CreateClient("AccuWeather");
+
         }
-        public async Task<CommonWeatherDto> PerformQueryAsync(string query)
+        public async Task<CommonWeatherDto> FetchAsync(LocationKey locationId)
         {
-            var response = await _performQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
+            var query = $"apikey={_options.API_KEY}&details=true";
+            var response = await PerformQueryService.PerformQueryAsync(_client, _options.WeatherRouter + $"/{locationId.Key}", query);
             return new CommonWeatherDto((await response.Content.ReadAsAsync<AccuWeatherDto[]>())[0]);
         }
 
         public async Task<CommonWeatherDto> GetWeatherAsync(double lat, double lng)
         {
-            var locationId = await (await _client.GetAsync(_options.LocationsRouter + FormQuery(lat, lng))).Content.ReadAsAsync<LocationKey>();
-            return await PerformQueryAsync($"/{locationId.Key}?apikey={_options.API_KEY}&details=true");
+            var locationId = (await (await PerformQueryService.PerformQueryAsync(_client, _options.LocationsRouter + "/geoposition/search", FormQuery(lat, lng))).Content.ReadAsAsync<LocationKey>());
+            return await FetchAsync(locationId);
         }
         public async Task<CommonWeatherDto> GetWeatherAsync(string address)
         {
-            var locationId = (await (await _client.GetAsync(_options.LocationsRouter + FormQuery(address))).Content.ReadAsAsync<LocationKey[]>())[0];
-            return await PerformQueryAsync($"/{locationId.Key}?apikey={_options.API_KEY}&details=true");
+            var locationId = (await (await PerformQueryService.PerformQueryAsync(_client, _options.LocationsRouter + "/search", FormQuery(address))).Content.ReadAsAsync<LocationKey[]>())[0];
+            return await FetchAsync(locationId);
         }
         private string FormQuery(double lat, double lng)
         {
-            return "/geoposition/search?" + string.Join('&', new[]{
+            return string.Join('&', new[]{
                     "apikey=" + _options.API_KEY,
                     "q=" + $"{lat},{lng}"
                 }
@@ -50,7 +47,7 @@ namespace Weather.Services
         }
         private string FormQuery(string address)
         {
-            return "/search?" + string.Join('&', new[]{
+            return string.Join('&', new[]{
                     "apikey=" + _options.API_KEY,
                     "q=" + address,
                 }

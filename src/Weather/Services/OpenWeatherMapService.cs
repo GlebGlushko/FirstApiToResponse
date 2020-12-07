@@ -14,24 +14,19 @@ namespace Weather.Services
     {
         private readonly HttpClient _client;
         private readonly OpenWeatherMapOptions _options;
-        private readonly PerformQueryService _performQueryService;
-        public OpenWeatherMapService(IOptions<OpenWeatherMapOptions> options, PerformQueryService performQueryService)
+        public OpenWeatherMapService(IOptions<OpenWeatherMapOptions> options, IHttpClientFactory clientFactory)
         {
             _options = options.Value;
-            _performQueryService = performQueryService;
-            _client = new HttpClient
-            {
-                BaseAddress = new Uri(_options.URL)
-            };
-        }
-        public async Task<CommonWeatherDto> PerformQueryAsync(string query)
-        {
-            var response = await _performQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
+            _client = clientFactory.CreateClient("OpenWeatherMap");
 
+        }
+        public async Task<CommonWeatherDto> FetchAsync(string query)
+        {
+            var response = await PerformQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
             return new CommonWeatherDto(await response.Content.ReadAsAsync<OpenWeatherMapDto>());
         }
         public async Task<CommonWeatherDto> GetWeatherAsync(double lat, double lng) =>
-            await PerformQueryAsync(string.Join('&', new[]
+            await FetchAsync(string.Join('&', new[]
             {
                 "appid=" + _options.API_KEY,
                 "lat=" + lat,
@@ -40,7 +35,7 @@ namespace Weather.Services
             }));
 
         public async Task<CommonWeatherDto> GetWeatherAsync(string address) =>
-            await PerformQueryAsync(string.Join('&', new[]
+            await FetchAsync(string.Join('&', new[]
             {
                 "appid=" + _options.API_KEY,
                 "q=" + address,

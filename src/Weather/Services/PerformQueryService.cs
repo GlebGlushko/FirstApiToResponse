@@ -5,9 +5,9 @@ using Weather.DataTransferObjects;
 
 namespace Weather.Services
 {
-    public class PerformQueryService
+    public static class PerformQueryService
     {
-        public async Task<HttpResponseMessage> PerformQueryAsync(HttpClient client, string route, string query)
+        public static async Task<HttpResponseMessage> PerformQueryAsync(HttpClient client, string route, string query)
         {
             var response = await client.GetAsync(route + '?' + query);
             if (!response.IsSuccessStatusCode)

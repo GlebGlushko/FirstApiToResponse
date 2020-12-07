@@ -14,31 +14,26 @@ namespace Weather.Services
     {
         private readonly HttpClient _client;
         private readonly WeatherbitApiOptions _options;
-        private readonly PerformQueryService _performQueryService;
 
-        public WeatherbitService(IOptions<WeatherbitApiOptions> options, PerformQueryService performQueryService)
+        public WeatherbitService(IOptions<WeatherbitApiOptions> options, IHttpClientFactory clientFactory)
         {
             _options = options.Value;
-            _performQueryService = performQueryService;
-            _client = new HttpClient
-            {
-                BaseAddress = new Uri(_options.URL)
-            };
+            _client = clientFactory.CreateClient("Weatherbit");
         }
-        public async Task<CommonWeatherDto> PerformQueryAsync(string query)
+        public async Task<CommonWeatherDto> FetchAsync(string query)
         {
-            var response = await _performQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
+            var response = await PerformQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
             return new CommonWeatherDto(await response.Content.ReadAsAsync<WeatherbitDto>());
         }
         public async Task<CommonWeatherDto> GetWeatherAsync(double lat, double lng) =>
-            await PerformQueryAsync(string.Join('&', new[]{
+            await FetchAsync(string.Join('&', new[]{
                 "key=" + _options.API_KEY,
                 "lat=" + lat,
                 "lon=" + lng
             }));
 
         public async Task<CommonWeatherDto> GetWeatherAsync(string address) =>
-              await PerformQueryAsync(string.Join('&',
+              await FetchAsync(string.Join('&',
               new[]{
                 "key=" + _options.API_KEY,
                 "city=" + address
