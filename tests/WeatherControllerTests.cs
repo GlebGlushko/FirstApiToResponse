@@ -19,7 +19,7 @@ namespace tests
         [InlineData(0, 0)]
         [InlineData(90, 180)]
         [InlineData(-90, 45)]
-        public async void GerWeatherInfo_ReturnsOk_CorrectCoordinates(double lat, double lng)
+        public async void GetWeatherInfo_ReturnsOk_CorrectCoordinates(double lat, double lng)
         {
             var expected = new CommonWeatherDto { Description = "Test description" };
 

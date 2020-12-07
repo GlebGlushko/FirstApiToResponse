@@ -20,7 +20,7 @@ namespace Weather.Services
             _client = clientFactory.CreateClient("OpenWeatherMap");
 
         }
-        private async Task<CommonWeatherDto> FetchAsync(string query)
+        public async Task<CommonWeatherDto> FetchAsync(string query)
         {
             var response = await PerformQueryService.PerformQueryAsync(_client, _options.WeatherRouter, query);
             return new CommonWeatherDto(await response.Content.ReadAsAsync<OpenWeatherMapDto>());

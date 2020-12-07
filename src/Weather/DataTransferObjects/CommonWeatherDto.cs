@@ -25,7 +25,7 @@ namespace Weather.DataTransferObjects
             Temperature = data.Temp;
             Pressure = data.Pres;
             Humidity = data.Rh;
-            Description = data.Weather.Description;
+            Description = data.Weather?.Description;
             Wind = new WindInfo
             {
                 Direction = data.Wind_dir,

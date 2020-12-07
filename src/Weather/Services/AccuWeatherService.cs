@@ -20,7 +20,7 @@ namespace Weather.Services
             _client = clientFactory.CreateClient("AccuWeather");
 
         }
-        private async Task<CommonWeatherDto> FetchAsync(LocationKey locationId)
+        public async Task<CommonWeatherDto> FetchAsync(LocationKey locationId)
         {
             var query = $"apikey={_options.API_KEY}&details=true";
             var response = await PerformQueryService.PerformQueryAsync(_client, _options.WeatherRouter + $"/{locationId.Key}", query);
