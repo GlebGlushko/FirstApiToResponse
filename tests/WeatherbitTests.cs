@@ -57,12 +57,7 @@ namespace tests
         private WeatherbitService CreateMockWeatherbitService()
         {
             var fakeOptions = new WeatherbitApiOptions();
-            var fakeDto = new WeatherbitDto()
-            {
-                Data = new WeatherbitDto.WeatherbitWeatherInfo[]{
-                    new WeatherbitDto.WeatherbitWeatherInfo()
-                }
-            };
+            var fakeDto = new WeatherbitDto();
             var mockOptions = new Mock<IOptions<WeatherbitApiOptions>>();
             mockOptions.Setup(x => x.Value).Returns(fakeOptions);
 

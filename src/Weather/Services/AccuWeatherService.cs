@@ -26,15 +26,22 @@ namespace Weather.Services
             var response = await PerformQueryService.PerformQueryAsync(_client, _options.WeatherRouter + $"/{locationId.Key}", query);
             return new CommonWeatherDto((await response.Content.ReadAsAsync<AccuWeatherDto[]>())[0]);
         }
-
+        public async Task<LocationKey> GetLocation(double lat, double lng)
+        {
+            return (await (await PerformQueryService.PerformQueryAsync(_client, _options.LocationsRouter + "/geoposition/search", FormQuery(lat, lng))).Content.ReadAsAsync<LocationKey>());
+        }
+        public async Task<LocationKey> GetLocation(string address)
+        {
+            return (await (await PerformQueryService.PerformQueryAsync(_client, _options.LocationsRouter + "/search", FormQuery(address))).Content.ReadAsAsync<LocationKey[]>())[0];
+        }
         public async Task<CommonWeatherDto> GetWeatherAsync(double lat, double lng)
         {
-            var locationId = (await (await PerformQueryService.PerformQueryAsync(_client, _options.LocationsRouter + "/geoposition/search", FormQuery(lat, lng))).Content.ReadAsAsync<LocationKey>());
+            var locationId = await GetLocation(lat, lng);
             return await FetchAsync(locationId);
         }
         public async Task<CommonWeatherDto> GetWeatherAsync(string address)
         {
-            var locationId = (await (await PerformQueryService.PerformQueryAsync(_client, _options.LocationsRouter + "/search", FormQuery(address))).Content.ReadAsAsync<LocationKey[]>())[0];
+            var locationId = await GetLocation(address);
             return await FetchAsync(locationId);
         }
         private string FormQuery(double lat, double lng)

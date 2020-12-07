@@ -58,12 +58,7 @@ namespace tests
         private OpenWeatherMapService CreateMockOpenWeatherService()
         {
             var fakeOptions = new OpenWeatherMapOptions();
-            var fakeDto = new OpenWeatherMapDto()
-            {
-                Main = new OpenWeatherMapDto.MainInfo(),
-                Weather = new OpenWeatherMapDto.WeatherInfo[1] { new OpenWeatherMapDto.WeatherInfo() },
-                Wind = new OpenWeatherMapDto.WindInfo()
-            };
+            var fakeDto = new OpenWeatherMapDto();
 
             var mockOptions = new Mock<IOptions<OpenWeatherMapOptions>>();
             mockOptions.Setup(x => x.Value).Returns(fakeOptions);
