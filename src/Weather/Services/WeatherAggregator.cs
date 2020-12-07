@@ -8,7 +8,7 @@ using Weather.DataTransferObjects;
 
 namespace Weather.Services
 {
-    public class WeatherAggregator
+    public class WeatherAggregator : IWeatherAggregator
     {
         private readonly List<IWeatherService> _weatherServices;
         public WeatherAggregator(List<IWeatherService> services)

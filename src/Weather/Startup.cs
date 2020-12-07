@@ -63,7 +63,7 @@ namespace Weather
                     serviceProvider.GetRequiredService<AccuWeatherService>()
                });
 
-            services.AddScoped<WeatherAggregator>();
+            services.AddScoped<IWeatherAggregator, WeatherAggregator>();
             services.AddScoped<PerformQueryService>();
 
         }

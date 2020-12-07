@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Weather.DataTransferObjects;
-using Weather.Services;
 using Weather.Services.Interfaces;
 namespace Weather.Controllers
 {
@@ -13,8 +9,8 @@ namespace Weather.Controllers
     [ApiController]
     public class WeatherController : ControllerBase
     {
-        private readonly WeatherAggregator _aggregator;
-        public WeatherController(WeatherAggregator aggregator)
+        private readonly IWeatherAggregator _aggregator;
+        public WeatherController(IWeatherAggregator aggregator)
         {
             _aggregator = aggregator;
 
