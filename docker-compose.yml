@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  serv:
+    container_name: weatherapp
+    build:
+      context: ./src/Weather
+    ports:
+      - "8080:80"
+
